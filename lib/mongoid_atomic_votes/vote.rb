@@ -9,9 +9,19 @@ class Mongoid::AtomicVotes::Vote
   field :voter_type,  type: String
 
   validates_presence_of  :value, :voted_by_id, :voter_type
-  validates_inclusion_of :value,
-                         in: ->(vote){ vote.atomic_voteable.class.VOTE_RANGE },
-                         if: ->(vote){ defined? vote.atomic_voteable.class.VOTE_RANGE }
+  validates_inclusion_of :value, in: ->(vote){ vote.class.vote_range }, if: ->(vote){ vote.class.vote_range }
 
   index({voted_by_id: 1, mark: 1}, {unique: true, background: true})
+
+  class << self
+    @@vote_range = nil
+
+    def set_vote_range(val)
+      @@vote_range ||= val
+    end
+
+    def vote_range
+      @@vote_range
+    end
+  end
 end

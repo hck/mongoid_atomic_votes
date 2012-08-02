@@ -11,13 +11,13 @@ module Mongoid
       base.scope :voted_by,      ->(resource) { base.where('votes.voted_by_id' => resource.id, 'votes.voter_type' => resource.class.name) }
       base.scope :vote_value_in, ->(range)    { base.where(:vote_value.gte => range.begin, :vote_value.lte => range.end) }
       base.scope :highest_voted, ->(limit=10) { base.order_by(:vote_value.desc).limit(limit) }
+
+      base.extend ClassMethods
     end
 
     def vote(value, voted_by)
-      mark = Mongoid::AtomicVotes::Vote.new(value: value, voted_by_id: voted_by.id, voter_type: voted_by.class.name)
+      mark = Vote.new(value: value, voted_by_id: voted_by.id, voter_type: voted_by.class.name)
       return false unless mark.valid?
-
-      #puts '-' * 50
 
       _assigning do
         self.votes << mark
@@ -25,45 +25,41 @@ module Mongoid
         self.vote_count += 1
       end
 
-      #puts '+' * 50
-
       self.collection.
         find({_id: self.id}).
-        update('$inc' => {vote_count: 1}, '$set' => {vote_value: self.vote_value}, '$push' => {votes: mark.as_json})
-        #update('$inc' => {vote_count: 1}, '$set' => {vote_value: self.vote_value})
-
-      #puts '=' * 50
-
-      true
-
-      #self.inc(:vote_count, 1)
-      #self.set(:vote_value, vote_value)
-      #self.push(:votes, mark)
+        update('$inc' => {vote_count: 1}, '$set' => {vote_value: self.vote_value}, '$push' => {votes: mark.as_json}).nil?
     end
 
     def retract(voted_by)
       mark = self.votes.find_by(voted_by_id: voted_by.id)
       return false unless mark
 
-      vote_value = (self.vote_value * self.vote_count - mark.value) / (self.vote_count - 1)
+      _assigning do
+        self.votes.reject!{|v| v.id == mark.id}
+        self.vote_value = self.vote_count == 1 ? 0 : (self.vote_value * self.vote_count - mark.value) / (self.vote_count - 1)
+        self.vote_count -= 1
+      end
 
       self.collection.
         find({_id: self.id}).
-        update('$inc' => {vote_count: -1}, '$set' => {vote_value: vote_value}, '$push' => {votes: mark})
-
-      #self.inc(:vote_count, -1)
-      #self.set(:vote_value, vote_value)
-      #self.pull(:votes, mark)
+        update('$inc' => {vote_count: -1}, '$set' => {vote_value: vote_value}, '$pull' => {votes: {_id: mark.id}}).nil?
     end
 
     def has_votes?
-      vote_count != 0
+      self.vote_count > 0
     end
 
     def voted_by?(voted_by)
       !!self.votes.find_by(voted_by_id: voted_by.id)
     rescue
       false
+    end
+
+    module ClassMethods
+      def set_vote_range(val)
+        raise 'argument should be a Range' unless val.is_a?(Range)
+        Vote.send(__method__, val)
+      end
     end
   end
 end
