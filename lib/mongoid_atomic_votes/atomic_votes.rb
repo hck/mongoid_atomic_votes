@@ -72,11 +72,20 @@ module Mongoid
       self.collection.find(_id: self.id).update(opts).nil?
     end
 
+    def update_vote_value(mark, retract=false)
+      value, vote_count_diff = [mark.value, 1].map{|v| v * (retract ? -1 : 1)}
+      self.vote_value = if self.vote_count == 1 && retract
+                          nil
+                        else
+                          (self.vote_count * self.vote_value.to_f + value) / (self.vote_count + vote_count_diff)
+                        end
+      self.vote_count += vote_count_diff
+    end
+
     def add_vote_mark(mark)
       _assigning do
         self.votes << mark
-        self.vote_value = (self.vote_count * self.vote_value.to_i + mark.value).to_f / (self.vote_count + 1)
-        self.vote_count += 1
+        update_vote_value(mark)
       end
       update_votes(mark)
     end
@@ -84,8 +93,7 @@ module Mongoid
     def remove_vote_mark(mark)
       _assigning do
         self.votes.reject!{|v| v.id == mark.id}
-        self.vote_value = self.vote_count == 1 ? 0 : (self.vote_count * self.vote_value - mark.value) / (self.vote_count - 1)
-        self.vote_count -= 1
+        update_vote_value(mark, true)
       end
       update_votes(mark, true)
     end

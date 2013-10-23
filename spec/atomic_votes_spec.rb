@@ -128,7 +128,7 @@ describe Post do
         @post.retract(u).should be_true
         cnt -= 1
 
-        vote_value = @post.votes.size == 0 ? 0 : @post.votes.map(&:value).sum.to_f/@post.votes.size
+        vote_value = @post.votes.size == 0 ? nil : @post.votes.map(&:value).sum.to_f/@post.votes.size
 
         @post.vote_value.should == vote_value
         @post.vote_count.should == @post.votes.size
