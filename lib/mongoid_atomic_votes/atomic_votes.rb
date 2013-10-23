@@ -57,34 +57,37 @@ module Mongoid
     end
 
     private
+    def update_votes(mark, retract=false)
+      opts = {
+        '$inc' => {vote_count: retract ? -1 : 1},
+        '$set' => {vote_value: self.vote_value}
+      }
+
+      if retract
+        opts['$pull'] = {votes: {_id: mark.id}}
+      else
+        opts['$push'] = {votes: mark.as_json}
+      end
+
+      self.collection.find(_id: self.id).update(opts).nil?
+    end
+
     def add_vote_mark(mark)
       _assigning do
         self.votes << mark
         self.vote_value = (self.vote_count * self.vote_value.to_i + mark.value).to_f / (self.vote_count + 1)
         self.vote_count += 1
       end
-
-      self.collection.
-        find(_id: self.id).
-        update('$inc' => {vote_count: 1},
-               '$set' => {vote_value: self.vote_value},
-               '$push' => {votes: mark.as_json}
-      ).nil?
+      update_votes(mark)
     end
 
     def remove_vote_mark(mark)
       _assigning do
         self.votes.reject!{|v| v.id == mark.id}
-        self.vote_value = self.vote_count == 1 ? 0 : (self.vote_value * self.vote_count - mark.value) / (self.vote_count - 1)
+        self.vote_value = self.vote_count == 1 ? 0 : (self.vote_count * self.vote_value - mark.value) / (self.vote_count - 1)
         self.vote_count -= 1
       end
-
-      self.collection.
-        find(_id: self.id).
-        update('$inc' => {vote_count: -1},
-               '$set' => {vote_value: self.vote_value},
-               '$pull' => {votes: {_id: mark.id}}
-        ).nil?
+      update_votes(mark, true)
     end
   end
 end
