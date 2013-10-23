@@ -1,6 +1,6 @@
 # MongoidAtomicVotes
 
-[![Build Status](https://travis-ci.org/hck/mongoid_atomic_votes.png)](https://travis-ci.org/hck/mongoid_atomic_votes)
+[![Build Status](https://travis-ci.org/hck/mongoid_atomic_votes.png)](https://travis-ci.org/hck/mongoid_atomic_votes) [![Code Climate](https://codeclimate.com/github/hck/mongoid_atomic_votes.png)](https://codeclimate.com/github/hck/mongoid_atomic_votes)
 
 mongoid_atomic_votes adds possibility to vote on mongoid documents.
 Each vote mark goes to db by one atomic query that increments vote count, sets vote_value (overall document vote score) and pulls vote mark (embedded document with additional info about voter) to db.
