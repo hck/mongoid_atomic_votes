@@ -15,8 +15,8 @@ module Mongoid
       end
 
       def define_scopes(base)
-        base.scope :not_voted, base.where(:vote_value.exists => false)
-        base.scope :voted, base.where(:vote_value.exists => true)
+        base.scope :not_voted, -> { base.where(:vote_value.exists => false) }
+        base.scope :voted, -> { base.where(:vote_value.exists => true) }
         base.scope :voted_by, ->(resource) do
           base.where('votes.voted_by_id' => resource.id, 'votes.voter_type' => resource.class.name)
         end
@@ -69,7 +69,7 @@ module Mongoid
         opts['$push'] = {votes: mark.as_json}
       end
 
-      self.collection.find(_id: self.id).update(opts).nil?
+      self.collection.find(_id: self.id).update(opts)['ok'] > 0
     end
 
     def update_vote_value(mark, retract=false)

@@ -8,4 +8,5 @@ group :test do
   gem 'factory_girl'
   gem 'simplecov'
   gem 'database_cleaner'
+  gem 'pry'
 end

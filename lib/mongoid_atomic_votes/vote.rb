@@ -5,7 +5,7 @@ class Mongoid::AtomicVotes::Vote
   embedded_in :atomic_voteable, polymorphic: true
 
   field :value,       type: Integer
-  field :voted_by_id, type: Moped::BSON::ObjectId
+  field :voted_by_id, type: BSON::ObjectId
   field :voter_type,  type: String
 
   validates_presence_of  :value, :voted_by_id, :voter_type

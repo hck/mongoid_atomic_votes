@@ -14,5 +14,5 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
   gem.version       = Mongoid::AtomicVotes::VERSION
 
-  gem.add_runtime_dependency 'mongoid', ['>= 3.0']
+  gem.add_runtime_dependency 'mongoid', ['>= 4.0']
 end
