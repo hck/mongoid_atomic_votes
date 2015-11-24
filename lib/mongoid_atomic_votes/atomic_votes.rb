@@ -10,7 +10,7 @@ module Mongoid
       private
       def define_relations(base)
         base.field :vote_count, type: Integer, default: 0
-        base.field :vote_value, type: Float,   default: nil
+        base.field :vote_value, type: Float, default: nil
         base.embeds_many :votes, class_name: 'Mongoid::AtomicVotes::Vote', as: :atomic_voteable
       end
 
@@ -59,21 +59,21 @@ module Mongoid
     private
     def update_votes(mark, retract=false)
       opts = {
-        '$inc' => {vote_count: retract ? -1 : 1},
-        '$set' => {vote_value: self.vote_value}
+        '$inc' => { vote_count: retract ? -1 : 1 },
+        '$set' => { vote_value: self.vote_value }
       }
 
       if retract
-        opts['$pull'] = {votes: {_id: mark.id}}
+        opts['$pull'] = { votes: { _id: mark.id } }
       else
-        opts['$push'] = {votes: mark.as_json}
+        opts['$push'] = { votes: mark.as_json }
       end
 
-      self.collection.find(_id: self.id).update(opts)['ok'] > 0
+      self.collection.find(_id: self.id).update_one(opts).modified_count > 0
     end
 
     def update_vote_value(mark, retract=false)
-      value, vote_count_diff = [mark.value, 1].map{|v| v * (retract ? -1 : 1)}
+      value, vote_count_diff = [mark.value, 1].map { |v| v * (retract ? -1 : 1) }
       self.vote_value = if self.vote_count == 1 && retract
                           nil
                         else
@@ -92,7 +92,7 @@ module Mongoid
 
     def remove_vote_mark(mark)
       _assigning do
-        self.votes.reject!{|v| v.id == mark.id}
+        self.votes.reject! { |v| v.id == mark.id }
         update_vote_value(mark, true)
       end
       update_votes(mark, true)

@@ -1,17 +1,17 @@
-$LOAD_PATH.unshift(File.dirname(__FILE__))
-$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
-
 MODELS = File.join(File.dirname(__FILE__), 'models')
 
-require 'simplecov'
-
-SimpleCov.start
-
 require 'rubygems'
-require 'mongoid'
-require 'mongoid_atomic_votes'
 require 'database_cleaner'
 require 'factory_girl'
+require 'simplecov'
+
+SimpleCov.start do
+  add_filter '/.gems/'
+  add_filter '/.bundle/'
+end
+
+require 'mongoid'
+require 'mongoid_atomic_votes'
 
 Dir["#{MODELS}/*.rb"].each { |f| require f }
 
@@ -19,11 +19,8 @@ Mongoid.configure do |config|
   config.connect_to 'mongoid_atomic_votes_test'
 end
 
-#Mongoid.logger = Logger.new($stdout)
-#Moped.logger = Logger.new($stdout)
-
-#Mongoid.logger.level = Logger::DEBUG
-#Moped.logger.level = Logger::DEBUG
+Mongoid.logger.level = Logger::ERROR
+Mongo::Logger.logger.level = Logger::ERROR
 
 FactoryGirl.definition_file_paths = [File.join(File.dirname(__FILE__), 'factories')]
 FactoryGirl.find_definitions

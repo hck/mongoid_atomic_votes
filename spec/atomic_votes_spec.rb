@@ -7,7 +7,7 @@ describe Post do
     @post = FactoryGirl.create(:post)
   end
 
-  it "has Mongoid::AtomicVotes module" do
+  it 'has Mongoid::AtomicVotes module' do
     expect(subject.class.ancestors).to include(Mongoid::AtomicVotes)
   end
 
@@ -19,7 +19,7 @@ describe Post do
   it { expect(subject).to respond_to(:votes) }
 
   it { expect(subject.class).to respond_to(:set_vote_range) }
-  it { expect { subject.class.set_vote_range(1) }.to raise_exception }
+  it { expect { subject.class.set_vote_range(1) }.to raise_error('argument should be a Range') }
 
   describe '#votes' do
     it 'is array of votes' do
@@ -71,7 +71,7 @@ describe Post do
       end
 
       vote_value = @post.votes.map(&:value).sum.to_f/@post.votes.size
-      
+
       expect(@post.vote_value).to eq(vote_value)
       expect(@post.vote_count).to eq(@users.size)
       expect(@post.votes.size).to eq(@users.size)

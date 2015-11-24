@@ -6,7 +6,7 @@ gemspec
 group :test do
   gem 'rspec'
   gem 'factory_girl'
-  gem 'simplecov'
+  gem 'simplecov', require: false
   gem 'database_cleaner'
   gem 'pry'
 end
