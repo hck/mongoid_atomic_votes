@@ -3,15 +3,14 @@ MODELS = File.join(File.dirname(__FILE__), 'models')
 require 'rubygems'
 require 'database_cleaner'
 require 'factory_girl'
+require 'mongoid'
+require 'mongoid_atomic_votes'
 require 'simplecov'
 
 SimpleCov.start do
   add_filter '/.gems/'
   add_filter '/.bundle/'
 end
-
-require 'mongoid'
-require 'mongoid_atomic_votes'
 
 Dir["#{MODELS}/*.rb"].each { |f| require f }
 
