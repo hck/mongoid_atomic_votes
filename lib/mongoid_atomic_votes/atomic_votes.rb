@@ -35,14 +35,12 @@ module Mongoid
 
     def vote(value, voted_by)
       mark = Vote.new(value: value, voted_by_id: voted_by.id, voter_type: voted_by.class.name)
-      return false unless mark.valid?
       add_vote_mark(mark)
     end
 
     def retract(voted_by)
       mark = self.votes.find_by(voted_by_id: voted_by.id)
-      return false unless mark
-      remove_vote_mark(mark)
+      mark && remove_vote_mark(mark)
     end
 
     def has_votes?
@@ -51,7 +49,7 @@ module Mongoid
 
     def voted_by?(voted_by)
       !!self.votes.find_by(voted_by_id: voted_by.id)
-    rescue
+    rescue NoMethodError, Mongoid::Errors::DocumentNotFound
       false
     end
 
@@ -89,11 +87,16 @@ module Mongoid
     end
 
     def add_vote_mark(mark)
+      mark_is_valid = false
+
       _assigning do
         self.votes << mark
-        update_vote_value(mark)
+        mark_is_valid = mark.valid?
+
+        mark_is_valid && update_vote_value(mark)
       end
-      update_votes(mark)
+
+      mark_is_valid && update_votes(mark)
     end
 
     def remove_vote_mark(mark)
