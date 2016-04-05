@@ -33,20 +33,36 @@ module Mongoid
       end
     end
 
+    # Creates an embedded vote record and updates number of votes and vote value.
+    #
+    # @param [Int,Float] value vote value
+    # @param [Mongoid::Document] voted_by object from which the vote is done
+    # @return [Boolean] success flag
     def vote(value, voted_by)
       mark = Vote.new(value: value, voted_by_id: voted_by.id, voter_type: voted_by.class.name)
       add_vote_mark(mark)
     end
 
+    # Removes previously added vote.
+    #
+    # @param [Mongoid::Document] voted_by object from which the vote was done
+    # @return [Boolean] success flag
     def retract(voted_by)
       mark = self.votes.find_by(voted_by_id: voted_by.id)
       mark && remove_vote_mark(mark)
     end
 
+    # Indicates whether the document has votes or not.
+    #
+    # @return [Boolean]
     def has_votes?
       self.vote_count > 0
     end
 
+    # Indicates whether the document has a vote from particular voter object
+    #
+    # @param [Mongoid::Document] voted_by object from which the vote was done
+    # @return [Boolean]
     def voted_by?(voted_by)
       !!self.votes.find_by(voted_by_id: voted_by.id)
     rescue NoMethodError, Mongoid::Errors::DocumentNotFound
@@ -56,11 +72,17 @@ module Mongoid
     module ClassMethods
       attr_reader :vote_range
 
+      # Specifies possible vote range which is used vote mark validation later.
+      #
+      # @param [Range] val new vote range, for example: 1..5
+      # @return [Range] vote range, previously passed to a method as a parameter
       def set_vote_range(val)
         raise 'argument should be a Range' unless val.is_a?(Range)
         @vote_range = val
       end
 
+      # Sets vote range to nil
+      # @return [NilClass] nil
       def reset_vote_range
         @vote_range = nil
       end
