@@ -54,9 +54,15 @@ module Mongoid
     end
 
     module ClassMethods
+      attr_reader :vote_range
+
       def set_vote_range(val)
         raise 'argument should be a Range' unless val.is_a?(Range)
-        Vote.send(__method__, val)
+        @vote_range = val
+      end
+
+      def reset_vote_range
+        @vote_range = nil
       end
     end
 
