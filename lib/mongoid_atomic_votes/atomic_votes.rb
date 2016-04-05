@@ -4,6 +4,7 @@ module Mongoid
       def included(base)
         define_relations(base)
         define_scopes(base)
+
         base.extend ClassMethods
       end
 
@@ -11,18 +12,23 @@ module Mongoid
       def define_relations(base)
         base.field :vote_count, type: Integer, default: 0
         base.field :vote_value, type: Float, default: nil
+
         base.embeds_many :votes, class_name: 'Mongoid::AtomicVotes::Vote', as: :atomic_voteable
       end
 
       def define_scopes(base)
         base.scope :not_voted, -> { base.where(:vote_value.exists => false) }
+
         base.scope :voted, -> { base.where(:vote_value.exists => true) }
+
         base.scope :voted_by, ->(resource) do
           base.where('votes.voted_by_id' => resource.id, 'votes.voter_type' => resource.class.name)
         end
+
         base.scope :vote_value_in, ->(range) do
           base.where(:vote_value.gte => range.begin, :vote_value.lte => range.end)
         end
+
         base.scope :highest_voted, ->(limit=10) { base.order_by(:vote_value.desc).limit(limit) }
       end
     end
@@ -57,7 +63,7 @@ module Mongoid
     end
 
     private
-    def update_votes(mark, retract=false)
+    def update_votes(mark, retract = false)
       opts = {
         '$inc' => { vote_count: retract ? -1 : 1 },
         '$set' => { vote_value: self.vote_value }
@@ -72,7 +78,7 @@ module Mongoid
       self.collection.find(_id: self.id).update_one(opts).modified_count > 0
     end
 
-    def update_vote_value(mark, retract=false)
+    def update_vote_value(mark, retract = false)
       value, vote_count_diff = [mark.value, 1].map { |v| v * (retract ? -1 : 1) }
       self.vote_value = if self.vote_count == 1 && retract
                           nil
@@ -95,6 +101,7 @@ module Mongoid
         self.votes.reject! { |v| v.id == mark.id }
         update_vote_value(mark, true)
       end
+
       update_votes(mark, true)
     end
   end
