@@ -99,6 +99,22 @@ module Mongoid
 
     private
 
+    def update_vote_value(mark, retract: false)
+      count = retract ? -1 : 1
+      value = mark.value * count
+
+      self.vote_value = if self.vote_count + count > 0
+                          calculate_vote_value(value, count)
+                        else
+                          nil
+                        end
+      self.vote_count += count
+    end
+
+    def calculate_vote_value(value, count)
+      (self.vote_count * self.vote_value.to_f + value) / (self.vote_count + count)
+    end
+
     def update_votes(mark, retract: false)
       opts = retract ? retract_options(mark) : vote_options(mark)
       self.collection.find(_id: self.id).update_one(opts).modified_count > 0
@@ -120,16 +136,6 @@ module Mongoid
       }
     end
 
-    def update_vote_value(mark, retract = false)
-      value, vote_count_diff = [mark.value, 1].map { |v| v * (retract ? -1 : 1) }
-      self.vote_value = if self.vote_count == 1 && retract
-                          nil
-                        else
-                          (self.vote_count * self.vote_value.to_f + value) / (self.vote_count + vote_count_diff)
-                        end
-      self.vote_count += vote_count_diff
-    end
-
     def add_vote_mark(mark)
       mark_is_valid = false
 
@@ -146,7 +152,7 @@ module Mongoid
     def remove_vote_mark(mark)
       _assigning do
         self.votes.reject! { |v| v.id == mark.id }
-        update_vote_value(mark, true)
+        update_vote_value(mark, retract: true)
       end
 
       update_votes(mark, retract: true)
