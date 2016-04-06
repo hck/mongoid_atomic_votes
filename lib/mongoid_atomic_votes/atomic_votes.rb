@@ -98,19 +98,26 @@ module Mongoid
     end
 
     private
-    def update_votes(mark, retract = false)
-      opts = {
-        '$inc' => { vote_count: retract ? -1 : 1 },
-        '$set' => { vote_value: self.vote_value }
-      }
 
-      if retract
-        opts['$pull'] = { votes: { _id: mark.id } }
-      else
-        opts['$push'] = { votes: mark.as_json }
-      end
-
+    def update_votes(mark, retract: false)
+      opts = retract ? retract_options(mark) : vote_options(mark)
       self.collection.find(_id: self.id).update_one(opts).modified_count > 0
+    end
+
+    def vote_options(mark)
+      {
+          '$inc' => { vote_count: 1 },
+          '$set' => { vote_value: self.vote_value },
+          '$push' => { votes: mark.as_json }
+      }
+    end
+
+    def retract_options(mark)
+      {
+          '$inc' => { vote_count: -1 },
+          '$set' => { vote_value: self.vote_value },
+          '$pull' => { votes: { _id: mark.id } }
+      }
     end
 
     def update_vote_value(mark, retract = false)
@@ -142,7 +149,7 @@ module Mongoid
         update_vote_value(mark, true)
       end
 
-      update_votes(mark, true)
+      update_votes(mark, retract: true)
     end
   end
 end
