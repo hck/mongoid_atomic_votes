@@ -86,7 +86,7 @@ module Mongoid
       # @param [Range] val new vote range, for example: 1..5
       # @return [Range] vote range, previously passed to a method as a parameter
       def set_vote_range(val)
-        raise ArgumentError.new('argument should be a Range') unless val.is_a?(Range)
+        fail ArgumentError.new('argument should be a Range') unless val.is_a?(Range)
         @vote_range = val
       end
 
