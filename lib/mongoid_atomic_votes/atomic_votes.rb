@@ -2,6 +2,7 @@ module Mongoid
   module AtomicVotes
     class << self
       def included(base)
+        define_fields(base)
         define_relations(base)
         define_scopes(base)
 
@@ -9,10 +10,12 @@ module Mongoid
       end
 
       private
-      def define_relations(base)
+      def define_fields(base)
         base.field :vote_count, type: Integer, default: 0
         base.field :vote_value, type: Float, default: nil
+      end
 
+      def define_relations(base)
         base.embeds_many :votes, class_name: 'Mongoid::AtomicVotes::Vote', as: :atomic_voteable
       end
 
@@ -22,11 +25,17 @@ module Mongoid
         base.scope :voted, -> { base.where(:vote_value.exists => true) }
 
         base.scope :voted_by, ->(resource) do
-          base.where('votes.voted_by_id' => resource.id, 'votes.voter_type' => resource.class.name)
+          base.where(
+            'votes.voted_by_id' => resource.id,
+            'votes.voter_type' => resource.class.name
+          )
         end
 
         base.scope :vote_value_in, ->(range) do
-          base.where(:vote_value.gte => range.begin, :vote_value.lte => range.end)
+          base.where(
+            :vote_value.gte => range.begin,
+            :vote_value.lte => range.end
+          )
         end
 
         base.scope :highest_voted, ->(limit=10) { base.order_by(:vote_value.desc).limit(limit) }
