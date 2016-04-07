@@ -20,25 +20,27 @@ module Mongoid
       end
 
       def define_scopes(base)
-        base.scope :not_voted, -> { base.where(:vote_value.exists => false) }
+        scopes(base).each { |name, block| base.scope name, block }
+      end
 
-        base.scope :voted, -> { base.where(:vote_value.exists => true) }
-
-        base.scope :voted_by, ->(resource) do
-          base.where(
-            'votes.voted_by_id' => resource.id,
-            'votes.voter_type' => resource.class.name
-          )
-        end
-
-        base.scope :vote_value_in, ->(range) do
-          base.where(
-            :vote_value.gte => range.begin,
-            :vote_value.lte => range.end
-          )
-        end
-
-        base.scope :highest_voted, ->(limit=10) { base.order_by(:vote_value.desc).limit(limit) }
+      def scopes(base)
+        {
+            not_voted: -> { base.where(:vote_value.exists => false) },
+            voted: -> { base.where(:vote_value.exists => true) },
+            voted_by: ->(resource) {
+              base.where(
+                  'votes.voted_by_id' => resource.id,
+                  'votes.voter_type' => resource.class.name
+              )
+            },
+            vote_value_in: ->(range) {
+              base.where(
+                  :vote_value.gte => range.begin,
+                  :vote_value.lte => range.end
+              )
+            },
+            highest_voted: ->(limit=10) { base.order_by(:vote_value.desc).limit(limit) }
+        }
       end
     end
 
