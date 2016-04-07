@@ -99,25 +99,24 @@ module Mongoid
 
     private
 
-    def update_vote_value(mark, retract: false)
-      count = retract ? -1 : 1
-      value = mark.value * count
-
-      self.vote_value = if self.vote_count + count > 0
-                          calculate_vote_value(value, count)
-                        else
-                          nil
-                        end
-      self.vote_count += count
+    def update_vote_counters(mark, increment_count_by)
+      self.vote_value = calculate_vote_value(mark.value, increment_count_by)
+      self.vote_count += increment_count_by
     end
 
     def calculate_vote_value(value, count)
-      (self.vote_count * self.vote_value.to_f + value) / (self.vote_count + count)
+      current_vote_count = self.vote_count
+      new_vote_count = current_vote_count + count
+
+      if new_vote_count > 0
+        (current_vote_count * self.vote_value.to_f + value * count) / new_vote_count
+      else
+        nil
+      end
     end
 
-    def update_votes(mark, retract: false)
-      opts = retract ? retract_options(mark) : vote_options(mark)
-      self.collection.find(_id: self.id).update_one(opts).modified_count > 0
+    def update_votes(query_opts)
+      self.collection.find(_id: self.id).update_one(query_opts).modified_count > 0
     end
 
     def vote_options(mark)
@@ -142,20 +141,19 @@ module Mongoid
       _assigning do
         self.votes << mark
         mark_is_valid = mark.valid?
-
-        mark_is_valid && update_vote_value(mark)
+        mark_is_valid && update_vote_counters(mark, 1)
       end
 
-      mark_is_valid && update_votes(mark)
+      mark_is_valid && update_votes(vote_options(mark))
     end
 
     def remove_vote_mark(mark)
       _assigning do
-        self.votes.reject! { |v| v.id == mark.id }
-        update_vote_value(mark, retract: true)
+        self.votes.reject! { |vote| vote.id == mark.id }
+        update_vote_counters(mark, -1)
       end
 
-      update_votes(mark, retract: true)
+      update_votes(retract_options(mark))
     end
   end
 end
