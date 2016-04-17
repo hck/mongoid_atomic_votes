@@ -15,7 +15,7 @@ And then execute:
 
     $ bundle
 
-Or install it yourself as:
+or install it yourself as:
 
     $ gem install mongoid_atomic_votes
 
@@ -28,14 +28,14 @@ Include Mongoid::AtomicVotes into your mongoid documents for which you wish to a
       include Mongoid::AtomicVotes
     end
 
-and then just call methods on model instances to vote/retract:
+Then just call methods on model instances to vote/retract:
 
     @article = Article.find(...)
     @user = User.find(...)
-    @article.vote(1, @user) #vote
-    @article.retract(@user) #retract
+    @article.vote(1, @user) # vote
+    @article.retract(@user) # retract
 
-You dont need to save your document after you called `#vote` or `#retract`
+You dont need to save your document after you called `#vote` or `#retract`.
 
 Getting overall document vote score:
 
@@ -49,7 +49,7 @@ Check whether document has votes:
 
     @article.has_votes?
 
-Check whether document was voted by some voters:
+Check whether document was voted by particular voter:
 
     @article.voted_by? @user
 
