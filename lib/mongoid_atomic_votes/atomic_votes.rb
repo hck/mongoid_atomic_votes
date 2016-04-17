@@ -25,21 +25,21 @@ module Mongoid
 
       def scopes(base)
         {
-            not_voted: -> { base.where(:vote_value.exists => false) },
-            voted: -> { base.where(:vote_value.exists => true) },
-            voted_by: ->(resource) {
-              base.where(
-                  'votes.voted_by_id' => resource.id,
-                  'votes.voter_type' => resource.class.name
-              )
-            },
-            vote_value_in: ->(range) {
-              base.where(
-                  :vote_value.gte => range.begin,
-                  :vote_value.lte => range.end
-              )
-            },
-            highest_voted: ->(limit=10) { base.order_by(:vote_value.desc).limit(limit) }
+          not_voted: -> { base.where(:vote_value.exists => false) },
+          voted: -> { base.where(:vote_value.exists => true) },
+          voted_by: ->(resource) {
+            base.where(
+              'votes.voted_by_id' => resource.id,
+              'votes.voter_type' => resource.class.name
+            )
+          },
+          vote_value_in: ->(range) {
+            base.where(
+              :vote_value.gte => range.begin,
+              :vote_value.lte => range.end
+            )
+          },
+          highest_voted: ->(limit=10) { base.order_by(:vote_value.desc).limit(limit) }
         }
       end
     end
@@ -123,17 +123,17 @@ module Mongoid
 
     def vote_options(mark)
       {
-          '$inc' => { vote_count: 1 },
-          '$set' => { vote_value: self.vote_value },
-          '$push' => { votes: mark.as_json }
+        '$inc' => { vote_count: 1 },
+        '$set' => { vote_value: self.vote_value },
+        '$push' => { votes: mark.as_json }
       }
     end
 
     def retract_options(mark)
       {
-          '$inc' => { vote_count: -1 },
-          '$set' => { vote_value: self.vote_value },
-          '$pull' => { votes: { _id: mark.id } }
+        '$inc' => { vote_count: -1 },
+        '$set' => { vote_value: self.vote_value },
+        '$pull' => { votes: { _id: mark.id } }
       }
     end
 
