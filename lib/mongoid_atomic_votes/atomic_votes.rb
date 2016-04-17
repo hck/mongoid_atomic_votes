@@ -10,6 +10,7 @@ module Mongoid
       end
 
       private
+
       def define_fields(base)
         base.field :vote_count, type: Integer, default: 0
         base.field :vote_value, type: Float, default: nil
@@ -70,7 +71,7 @@ module Mongoid
       self.vote_count > 0
     end
 
-    # Indicates whether the document has a vote from particular voter object
+    # Indicates whether the document has a vote from particular voter object.
     #
     # @param [Mongoid::Document] voted_by object from which the vote was done
     # @return [Boolean]
@@ -93,6 +94,7 @@ module Mongoid
       end
 
       # Sets vote range to nil
+      #
       # @return [NilClass] nil
       def reset_vote_range
         @vote_range = nil
