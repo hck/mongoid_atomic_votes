@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Post do
+RSpec.describe Post do
   let!(:users) { FactoryGirl.create_list(:user, 2) }
   let!(:post) { FactoryGirl.create(:post) }
 
