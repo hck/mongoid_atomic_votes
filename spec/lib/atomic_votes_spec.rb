@@ -15,8 +15,8 @@ RSpec.describe Post do
   it { expect(subject).to respond_to(:vote_value) }
   it { expect(subject).to respond_to(:votes) }
 
-  it { expect(subject.class).to respond_to(:set_vote_range) }
-  it { expect { subject.class.set_vote_range(1) }.to raise_error('argument should be a Range') }
+  it { expect(subject.class).to respond_to(:vote_range=) }
+  it { expect { subject.class.vote_range = 1 }.to raise_error('argument should be a Range') }
 
   describe '#votes' do
     it { expect(post.votes).to be_an_instance_of(Array) }
@@ -166,7 +166,7 @@ RSpec.describe Post do
   end
 
   describe 'when model has vote_range' do
-    before { Post.set_vote_range(1..5) }
+    before { Post.vote_range = 1..5 }
 
     it 'marks vote as invalid if value is out of range' do
       post.vote(rand(6..10), users.sample)

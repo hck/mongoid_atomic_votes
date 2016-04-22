@@ -24,7 +24,7 @@ RSpec.describe Mongoid::AtomicVotes::Vote do
   context 'with vote range' do
     before do
       vote.atomic_voteable = post
-      post.class.set_vote_range(2..5)
+      post.class.vote_range = 2..5
     end
 
     after { post.class.reset_vote_range }
