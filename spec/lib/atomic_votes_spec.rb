@@ -156,9 +156,9 @@ RSpec.describe Post do
 
         db_post = Post.find(post.id)
         votes_info = [
-            db_post.vote_value,
-            db_post.vote_count,
-            db_post.votes.size
+          db_post.vote_value,
+          db_post.vote_count,
+          db_post.votes.size
         ]
         expect(votes_info).to eq([expected_vote_value, users.size - 1, users.size - 1])
       end
