@@ -28,19 +28,19 @@ module Mongoid
         {
           not_voted: -> { base.where(:vote_value.exists => false) },
           voted: -> { base.where(:vote_value.exists => true) },
-          voted_by: ->(resource) {
+          voted_by: lambda do |resource|
             base.where(
               'votes.voted_by_id' => resource.id,
               'votes.voter_type' => resource.class.name
             )
-          },
-          vote_value_in: ->(range) {
+          end,
+          vote_value_in: lambda do |range|
             base.where(
               :vote_value.gte => range.begin,
               :vote_value.lte => range.end
             )
-          },
-          highest_voted: ->(limit=10) { base.order_by(:vote_value.desc).limit(limit) }
+          end,
+          highest_voted: ->(limit = 10) { base.order_by(:vote_value.desc).limit(limit) }
         }
       end
     end
@@ -60,7 +60,7 @@ module Mongoid
     # @param [Mongoid::Document] voted_by object from which the vote was done
     # @return [Boolean] success flag
     def retract(voted_by)
-      mark = self.votes.find_by(voted_by_id: voted_by.id)
+      mark = votes.find_by(voted_by_id: voted_by.id)
       mark && remove_vote_mark(mark)
     end
 
@@ -68,7 +68,7 @@ module Mongoid
     #
     # @return [Boolean]
     def has_votes?
-      self.vote_count > 0
+      vote_count > 0
     end
 
     # Indicates whether the document has a vote from particular voter object.
@@ -76,7 +76,7 @@ module Mongoid
     # @param [Mongoid::Document] voted_by object from which the vote was done
     # @return [Boolean]
     def voted_by?(voted_by)
-      !!self.votes.find_by(voted_by_id: voted_by.id)
+      !!votes.find_by(voted_by_id: voted_by.id)
     rescue NoMethodError, Mongoid::Errors::DocumentNotFound
       false
     end
@@ -112,21 +112,17 @@ module Mongoid
       current_vote_count = self.vote_count
       new_vote_count = current_vote_count + count
 
-      if new_vote_count > 0
-        (current_vote_count * self.vote_value.to_f + value * count) / new_vote_count
-      else
-        nil
-      end
+      (current_vote_count * vote_value.to_f + value * count) / new_vote_count if new_vote_count > 0
     end
 
     def update_votes(query_opts)
-      self.collection.find(_id: self.id).update_one(query_opts).modified_count > 0
+      collection.find(_id: id).update_one(query_opts).modified_count > 0
     end
 
     def vote_options(mark)
       {
         '$inc' => { vote_count: 1 },
-        '$set' => { vote_value: self.vote_value },
+        '$set' => { vote_value: vote_value },
         '$push' => { votes: mark.as_json }
       }
     end
@@ -134,7 +130,7 @@ module Mongoid
     def retract_options(mark)
       {
         '$inc' => { vote_count: -1 },
-        '$set' => { vote_value: self.vote_value },
+        '$set' => { vote_value: vote_value },
         '$pull' => { votes: { _id: mark.id } }
       }
     end
@@ -143,7 +139,7 @@ module Mongoid
       mark_is_valid = false
 
       _assigning do
-        self.votes << mark
+        votes << mark
         mark_is_valid = mark.valid?
         mark_is_valid && update_vote_counters(mark, 1)
       end
@@ -153,7 +149,7 @@ module Mongoid
 
     def remove_vote_mark(mark)
       _assigning do
-        self.votes.reject! { |vote| vote.id == mark.id }
+        votes.reject! { |vote| vote.id == mark.id }
         update_vote_counters(mark, -1)
       end
 
