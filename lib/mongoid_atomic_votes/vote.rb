@@ -1,3 +1,4 @@
+# Vote class which stores information about particular vote mark
 class Mongoid::AtomicVotes::Vote
   include Mongoid::Document
   include Mongoid::Timestamps::Created

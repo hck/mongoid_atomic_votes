@@ -1,4 +1,5 @@
 module Mongoid
+  # Module implements voting functionality
   module AtomicVotes
     class << self
       def included(base)
@@ -81,6 +82,8 @@ module Mongoid
       false
     end
 
+    # Class methods which are added to the document/model class
+    # Provides possibility to customize vote range for a model
     module ClassMethods
       attr_reader :vote_range
 
